@@ -11,7 +11,7 @@ import json
 # ===========================
 
 # 本地 Ollama API 地址
-LOCAL_API_URL = "http://localhost:11434"
+LOCAL_API_URL = "http://localhost:11436"
 
 # Ngrok 外网地址（启动服务后从 http://localhost:4040 获取）
 # 示例: "https://xxxx-xx-xx-xxx-xxx.ngrok-free.app"

@@ -108,7 +108,7 @@ python api_examples.py
 
 **1. 本地调用 - Generate API**
 ```bash
-curl http://localhost:11434/api/generate -d '{
+curl http://localhost:11436/api/generate -d '{
   "model": "gpt-oss:20b",
   "prompt": "什么是人工智能？",
   "stream": false
@@ -117,7 +117,7 @@ curl http://localhost:11434/api/generate -d '{
 
 **2. 本地调用 - Chat API**
 ```bash
-curl http://localhost:11434/api/chat -d '{
+curl http://localhost:11436/api/chat -d '{
   "model": "gpt-oss:20b",
   "messages": [
     {"role": "user", "content": "你好，请介绍一下自己。"}
@@ -137,7 +137,7 @@ curl https://your-ngrok-url.ngrok-free.app/api/generate -d '{
 
 **4. 列出所有模型**
 ```bash
-curl http://localhost:11434/api/tags
+curl http://localhost:11436/api/tags
 ```
 
 ## 📡 API 端点说明
