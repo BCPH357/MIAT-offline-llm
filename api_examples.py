@@ -1,24 +1,37 @@
 """
 Ollama API 调用示例
-支持本地调用和通过 ngrok 外网调用
+支持本地和内网调用
 """
 
 import requests
 import json
+import socket
 
 # ===========================
 # 配置区域
 # ===========================
 
 # 本地 Ollama API 地址
-LOCAL_API_URL = "http://localhost:11436"
+LOCAL_API_URL = "http://localhost:11434"
 
-# Ngrok 外网地址（启动服务后从 http://localhost:4040 获取）
-# 示例: "https://xxxx-xx-xx-xxx-xxx.ngrok-free.app"
-NGROK_API_URL = "YOUR_NGROK_URL_HERE"
+# 内网 Ollama API 地址（需要替换为实际的服务器内网 IP）
+# 示例: "http://192.168.1.100:11434"
+INTRANET_API_URL = "http://YOUR_SERVER_IP:11434"
 
 # 使用的模型名称
 MODEL_NAME = "gpt-oss:20b"
+
+
+def get_local_ip():
+    """获取本机内网 IP 地址"""
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "无法获取"
 
 
 # ===========================
@@ -193,23 +206,24 @@ def example_local_call():
     call_ollama_chat(LOCAL_API_URL, MODEL_NAME, messages)
 
 
-def example_ngrok_call():
-    """示例 2: 通过 ngrok 外网调用"""
+def example_intranet_call():
+    """示例 2: 内网调用（从其他设备访问）"""
     print("\n" + "=" * 50)
-    print("示例 2: Ngrok 外网 API 调用")
+    print("示例 2: 内网 API 调用")
     print("=" * 50 + "\n")
 
-    if NGROK_API_URL == "YOUR_NGROK_URL_HERE":
-        print("⚠️  请先设置 NGROK_API_URL")
-        print("访问 http://localhost:4040 获取 ngrok 公网地址")
+    if INTRANET_API_URL == "http://YOUR_SERVER_IP:11434":
+        print("⚠️  请先设置 INTRANET_API_URL")
+        print(f"提示: 本机内网 IP 是 {get_local_ip()}")
+        print(f"在其他设备上，使用 http://{get_local_ip()}:11434 访问")
         return
 
     # 列出模型
-    list_models(NGROK_API_URL)
+    list_models(INTRANET_API_URL)
 
     # Generate API 调用
     call_ollama_generate(
-        api_url=NGROK_API_URL,
+        api_url=INTRANET_API_URL,
         model=MODEL_NAME,
         prompt="解释一下什么是 LLM。",
         stream=False
@@ -262,13 +276,32 @@ def print_curl_examples():
 }}' ''')
     print()
 
-    print("4. 通过 Ngrok 外网调用（替换 YOUR_NGROK_URL）:")
-    print(f'''curl https://YOUR_NGROK_URL/api/generate -d '{{
+    local_ip = get_local_ip()
+
+    print(f"4. 从其他内网设备调用（替换 {local_ip} 为实际服务器 IP）:")
+    print(f'''curl http://{local_ip}:11434/api/generate -d '{{
   "model": "{MODEL_NAME}",
-  "prompt": "Hello from the internet!",
+  "prompt": "Hello from intranet!",
   "stream": false
 }}' ''')
     print()
+
+
+def print_network_info():
+    """打印网络配置信息"""
+    print("\n" + "=" * 50)
+    print("网络配置信息")
+    print("=" * 50 + "\n")
+
+    local_ip = get_local_ip()
+
+    print(f"📍 本机内网 IP: {local_ip}")
+    print(f"🔌 Ollama 服务端口: 11434")
+    print(f"\n📱 从其他设备访问:")
+    print(f"   API 地址: http://{local_ip}:11434")
+    print(f"   示例调用: http://{local_ip}:11434/api/tags")
+    print(f"\n⚠️  确保防火墙已开放 11434 端口")
+    print("-" * 50)
 
 
 # ===========================
@@ -279,17 +312,20 @@ if __name__ == "__main__":
     print("""
     ╔════════════════════════════════════════════╗
     ║     Ollama API 调用示例程序                ║
-    ║     支持本地和 Ngrok 外网调用              ║
+    ║     支持本地和内网调用                     ║
     ╚════════════════════════════════════════════╝
     """)
 
+    # 显示网络信息
+    print_network_info()
+
     # 运行示例
     example_local_call()
-    # example_ngrok_call()  # 取消注释以测试外网调用
+    # example_intranet_call()  # 取消注释以测试内网调用
     # example_stream_call()  # 取消注释以测试流式输出
 
     # 打印 cURL 示例
     print_curl_examples()
 
     print("\n✅ 示例执行完成！")
-    print("💡 提示: 修改代码中的 NGROK_API_URL 后可测试外网调用")
+    print(f"💡 提示: 其他设备可使用 http://{get_local_ip()}:11434 访问")

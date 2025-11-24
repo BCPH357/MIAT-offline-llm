@@ -5,7 +5,7 @@ services:
     image: ollama/ollama:latest
     container_name: ollama_service
     ports:
-      - "11436:11434"
+      - "11434:11434"  # 改回標準端口，方便內網訪問
     volumes:
       - ollama_data:/root/.ollama
     restart: unless-stopped
@@ -17,7 +17,7 @@ services:
               count: all
               capabilities: [gpu]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      test: ["CMD", "ollama", "list"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -25,31 +25,8 @@ services:
     networks:
       - ollama_network
 
-  ngrok:
-    image: ngrok/ngrok:latest
-    container_name: ngrok_tunnel
-    restart: unless-stopped
-    command:
-      - "http"
-      - "ollama:11434"
-      - "--authtoken=${NGROK_AUTHTOKEN}"
-      - "--log=stdout"
-    ports:
-      - "4040:4040"  # ngrok web interface
-    env_file:
-      - .env
-    volumes:
-      - ngrok_data:/home/ngrok/.ngrok2
-    depends_on:
-      ollama:
-        condition: service_healthy
-    networks:
-      - ollama_network
-
 volumes:
   ollama_data:
-    driver: local
-  ngrok_data:
     driver: local
 
 networks:

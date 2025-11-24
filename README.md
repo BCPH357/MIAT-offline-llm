@@ -1,15 +1,14 @@
-# Ollama + Ngrok 离线 LLM 部署方案
+# Ollama 内网 LLM 部署方案
 
-使用 Docker 部署 Ollama，并通过 Ngrok 实现外网访问的完整解决方案。
+使用 Docker 部署 Ollama，支持内网设备访问的离线 LLM 解决方案。
 
 ## 📋 目录结构
 
 ```
 MIAT_offline_llm/
 ├── docker-compose.yml      # Docker 编排配置
-├── .env.example           # 环境变量模板
-├── api_examples.py        # API 调用示例代码
-└── README.md             # 部署说明文档
+├── api_examples.py         # API 调用示例代码
+└── README.md              # 部署说明文档
 ```
 
 ## 🚀 快速开始
@@ -20,27 +19,13 @@ MIAT_offline_llm/
    - Windows: [Docker Desktop](https://www.docker.com/products/docker-desktop/)
    - Linux: `sudo apt-get install docker.io docker-compose`
 
-2. **NVIDIA GPU 驱动** (如果使用 GPU)
+2. **NVIDIA GPU 驱动**（可选，使用 GPU 加速）
    - 安装 NVIDIA Docker Runtime: [nvidia-docker](https://github.com/NVIDIA/nvidia-docker)
 
-3. **Ngrok 账号**
-   - 注册地址: https://dashboard.ngrok.com/signup
-   - 获取 authtoken: https://dashboard.ngrok.com/get-started/your-authtoken
-
-### 步骤 1: 配置环境变量
+### 步骤 1: 启动服务
 
 ```bash
-# 复制环境变量模板
-cp .env.example .env
-
-# 编辑 .env 文件，填入你的 ngrok token
-# NGROK_AUTHTOKEN=your_actual_token_here
-```
-
-### 步骤 2: 启动服务
-
-```bash
-# 启动 Ollama 和 Ngrok 服务
+# 启动 Ollama 服务
 docker-compose up -d
 
 # 查看服务状态
@@ -50,7 +35,7 @@ docker-compose ps
 docker-compose logs -f
 ```
 
-### 步骤 3: 下载 gpt-oss:20b 模型
+### 步骤 2: 下载 gpt-oss:20b 模型
 
 服务启动后，需要进入 Ollama 容器下载模型：
 
@@ -70,22 +55,19 @@ exit
 
 > ⚠️ **注意**: `gpt-oss:20b` 模型大小约 12-15GB，请确保有足够的磁盘空间和网络带宽。
 
-### 步骤 4: 获取 Ngrok 公网地址
+### 步骤 3: 获取内网 IP 地址
 
 ```bash
-# 方法 1: 访问 Ngrok Web 界面
-# 浏览器打开: http://localhost:4040
+# Windows
+ipconfig
 
-# 方法 2: 查看日志获取 URL
-docker-compose logs ngrok | grep "url="
+# Linux/Mac
+ifconfig
+# 或
+ip addr show
 ```
 
-你会看到类似这样的输出：
-```
-url=https://xxxx-xx-xx-xxx-xxx.ngrok-free.app
-```
-
-这就是你的公网访问地址！
+找到你的内网 IP 地址，通常是 `192.168.x.x` 或 `10.x.x.x` 格式。
 
 ## 🔧 API 调用示例
 
@@ -100,15 +82,49 @@ pip install requests
 ```bash
 # 本地调用测试
 python api_examples.py
+```
 
-# 修改 api_examples.py 中的 NGROK_API_URL 后测试外网调用
+示例代码会自动显示你的内网 IP 和访问地址。
+
+### 手动调用示例
+
+**本地调用**:
+```python
+import requests
+
+response = requests.post(
+    "http://localhost:11434/api/generate",
+    json={
+        "model": "gpt-oss:20b",
+        "prompt": "什么是人工智能？",
+        "stream": False
+    }
+)
+
+print(response.json()['response'])
+```
+
+**从其他内网设备调用**（替换 `192.168.1.100` 为实际服务器 IP）:
+```python
+import requests
+
+response = requests.post(
+    "http://192.168.1.100:11434/api/generate",
+    json={
+        "model": "gpt-oss:20b",
+        "prompt": "什么是人工智能？",
+        "stream": False
+    }
+)
+
+print(response.json()['response'])
 ```
 
 ### cURL 命令示例
 
 **1. 本地调用 - Generate API**
 ```bash
-curl http://localhost:11436/api/generate -d '{
+curl http://localhost:11434/api/generate -d '{
   "model": "gpt-oss:20b",
   "prompt": "什么是人工智能？",
   "stream": false
@@ -117,7 +133,7 @@ curl http://localhost:11436/api/generate -d '{
 
 **2. 本地调用 - Chat API**
 ```bash
-curl http://localhost:11436/api/chat -d '{
+curl http://localhost:11434/api/chat -d '{
   "model": "gpt-oss:20b",
   "messages": [
     {"role": "user", "content": "你好，请介绍一下自己。"}
@@ -126,18 +142,18 @@ curl http://localhost:11436/api/chat -d '{
 }'
 ```
 
-**3. 外网调用（替换为你的 ngrok URL）**
+**3. 内网调用（替换为实际服务器 IP）**
 ```bash
-curl https://your-ngrok-url.ngrok-free.app/api/generate -d '{
+curl http://192.168.1.100:11434/api/generate -d '{
   "model": "gpt-oss:20b",
-  "prompt": "Hello from the internet!",
+  "prompt": "Hello from intranet!",
   "stream": false
 }'
 ```
 
 **4. 列出所有模型**
 ```bash
-curl http://localhost:11436/api/tags
+curl http://localhost:11434/api/tags
 ```
 
 ## 📡 API 端点说明
@@ -152,43 +168,54 @@ curl http://localhost:11436/api/tags
 
 完整 API 文档: https://github.com/ollama/ollama/blob/main/docs/api.md
 
-## 🌐 外网访问配置
+## 🌐 内网访问配置
 
-### 从其他电脑调用 LLM
+### 从其他设备访问 LLM
 
-1. **获取 Ngrok URL**
-   - 访问 `http://localhost:4040` 获取公网地址
-   - 或查看日志: `docker-compose logs ngrok`
+1. **确认服务器内网 IP**
+   - 假设服务器 IP 是 `192.168.1.100`
 
-2. **使用公网地址调用**
-   ```python
-   import requests
+2. **确保防火墙开放端口**
 
-   NGROK_URL = "https://your-url.ngrok-free.app"
-
-   response = requests.post(
-       f"{NGROK_URL}/api/generate",
-       json={
-           "model": "gpt-oss:20b",
-           "prompt": "Hello from internet!",
-           "stream": False
-       }
-   )
-
-   print(response.json()['response'])
+   **Windows 防火墙**:
+   ```powershell
+   # PowerShell（管理员权限）
+   New-NetFirewallRule -DisplayName "Ollama API" -Direction Inbound -LocalPort 11434 -Protocol TCP -Action Allow
    ```
 
-3. **在其他设备测试**
-   - 使用相同的 ngrok URL 即可从任何联网设备访问
+   **Linux 防火墙**:
+   ```bash
+   # ufw
+   sudo ufw allow 11434/tcp
 
-### Ngrok 免费版限制
+   # firewalld
+   sudo firewall-cmd --permanent --add-port=11434/tcp
+   sudo firewall-cmd --reload
+   ```
 
-- ✅ HTTP/HTTPS 隧道
-- ✅ 随机子域名
-- ⚠️ 连接限制: 40 连接/分钟
-- ⚠️ 隧道会话时间: 8小时后需重启
+3. **从其他设备测试连接**
+   ```bash
+   # 测试连接
+   curl http://192.168.1.100:11434/api/tags
+   ```
 
-如需更稳定的服务，建议升级 Ngrok 付费计划或使用其他内网穿透方案。
+### 内网设备配置示例
+
+**从手机/平板访问**:
+- 确保设备连接到同一个内网（同一个 Wi-Fi）
+- 使用浏览器访问: `http://192.168.1.100:11434/api/tags`
+
+**从其他电脑访问**:
+```python
+import requests
+
+SERVER_IP = "192.168.1.100"
+API_URL = f"http://{SERVER_IP}:11434"
+
+# 测试连接
+response = requests.get(f"{API_URL}/api/tags")
+print(response.json())
+```
 
 ## 🛠️ 常用命令
 
@@ -206,7 +233,6 @@ docker-compose restart
 
 # 查看日志
 docker-compose logs -f ollama
-docker-compose logs -f ngrok
 
 # 查看资源使用
 docker stats
@@ -233,9 +259,8 @@ ollama run gpt-oss:20b
 
 ### 数据持久化
 
-数据保存在 Docker volumes 中：
+数据保存在 Docker volume 中：
 - `ollama_data`: 存储模型文件
-- `ngrok_data`: 存储 ngrok 配置
 
 ```bash
 # 查看 volumes
@@ -270,18 +295,24 @@ nvidia-smi
 #           capabilities: [gpu]
 ```
 
-### 问题 2: Ngrok 无法连接
+### 问题 2: 内网设备无法访问
 
-**可能原因**: Token 未正确配置
+**可能原因**: 防火墙阻止或网络配置问题
 
 **解决方案**:
 ```bash
-# 检查 .env 文件
-cat .env
+# 1. 检查服务是否运行
+docker-compose ps
 
-# 确保 NGROK_AUTHTOKEN 已设置
-# 重启服务
-docker-compose restart ngrok
+# 2. 检查端口是否开放
+netstat -an | grep 11434
+
+# 3. 在服务器上测试本地访问
+curl http://localhost:11434/api/tags
+
+# 4. 检查防火墙
+# Windows: 控制面板 -> Windows Defender 防火墙 -> 高级设置
+# Linux: sudo ufw status
 ```
 
 ### 问题 3: 模型响应缓慢
@@ -310,19 +341,6 @@ docker exec -it ollama_service nvidia-smi
 - 增加请求超时时间（建议 300 秒）
 - 预热模型: `docker exec -it ollama_service ollama run gpt-oss:20b "test"`
 
-### 问题 5: Ngrok 连接断开
-
-**原因**: 免费版 ngrok 隧道会话限制（8小时）
-
-**解决方案**:
-```bash
-# 重启 ngrok 服务
-docker-compose restart ngrok
-
-# 获取新的 URL
-docker-compose logs ngrok | grep "url="
-```
-
 ## 📊 性能优化建议
 
 ### 1. GPU 加速
@@ -348,32 +366,58 @@ environment:
 
 ### 3. 网络优化
 
-使用 Ngrok 时可能遇到延迟，优化建议：
-- 选择离你最近的 Ngrok 服务器区域
-- 考虑升级 Ngrok 付费计划
-- 或使用其他内网穿透工具（frp, cloudflare tunnel）
+**优化内网访问速度**:
+- 使用有线连接而非 Wi-Fi
+- 确保路由器性能足够
+- 考虑使用千兆网络交换机
 
 ## 🔐 安全建议
 
-1. **不要公开分享 Ngrok URL**
-   - URL 暴露后任何人都可以访问你的 LLM
+1. **内网访问控制**
+   - 只在受信任的内网中开放服务
+   - 不要将端口暴露到公网
 
-2. **添加认证**
+2. **添加认证**（可选）
    - 考虑在 API 前添加认证层（nginx + basic auth）
+   - 或使用 VPN 访问内网
 
 3. **监控使用量**
    - 定期检查 Ollama 日志
-   - 设置 ngrok 访问限制
+   - 监控异常请求
 
-4. **环境变量安全**
-   - 不要提交 `.env` 到 git
-   - `.env` 已包含在 `.gitignore` 中
+4. **防火墙配置**
+   - 只开放必要的端口（11434）
+   - 限制访问来源 IP 范围
+
+## 📱 移动设备访问示例
+
+### Android/iOS 应用示例
+
+可以使用任何支持 HTTP 请求的应用或自己开发：
+
+```javascript
+// JavaScript/React Native 示例
+const SERVER_IP = "192.168.1.100";
+
+fetch(`http://${SERVER_IP}:11434/api/generate`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    model: 'gpt-oss:20b',
+    prompt: '你好',
+    stream: false
+  })
+})
+.then(response => response.json())
+.then(data => console.log(data.response));
+```
 
 ## 📚 相关资源
 
 - [Ollama 官方文档](https://github.com/ollama/ollama)
 - [Ollama API 文档](https://github.com/ollama/ollama/blob/main/docs/api.md)
-- [Ngrok 文档](https://ngrok.com/docs)
 - [Docker Compose 文档](https://docs.docker.com/compose/)
 
 ## 🆘 获取帮助
