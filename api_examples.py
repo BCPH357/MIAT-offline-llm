@@ -12,11 +12,11 @@ import socket
 # ===========================
 
 # 本地 Ollama API 地址
-LOCAL_API_URL = "http://localhost:11435"
+LOCAL_API_URL = "http://localhost:11436"
 
 # 内网 Ollama API 地址（需要替换为实际的服务器内网 IP）
-# 示例: "http://192.168.1.100:11435"
-INTRANET_API_URL = "http://YOUR_SERVER_IP:11435"
+# 示例: "http://192.168.1.100:11436"
+INTRANET_API_URL = "http://YOUR_SERVER_IP:11436"
 
 # 使用的模型名称
 MODEL_NAME = "gpt-oss:20b"
@@ -279,7 +279,7 @@ def print_curl_examples():
     local_ip = get_local_ip()
 
     print(f"4. 从其他内网设备调用（替换 {local_ip} 为实际服务器 IP）:")
-    print(f'''curl http://{local_ip}:11435/api/generate -d '{{
+    print(f'''curl http://{local_ip}:11436/api/generate -d '{{
   "model": "{MODEL_NAME}",
   "prompt": "Hello from intranet!",
   "stream": false
@@ -296,11 +296,11 @@ def print_network_info():
     local_ip = get_local_ip()
 
     print(f"📍 本机内网 IP: {local_ip}")
-    print(f"🔌 Ollama 服务端口: 11435")
+    print(f"🔌 Ollama 服务端口: 11436")
     print(f"\n📱 从其他设备访问:")
-    print(f"   API 地址: http://{local_ip}:11435")
-    print(f"   示例调用: http://{local_ip}:11435/api/tags")
-    print(f"\n⚠️  确保防火墙已开放 11435 端口")
+    print(f"   API 地址: http://{local_ip}:11436")
+    print(f"   示例调用: http://{local_ip}:11436/api/tags")
+    print(f"\n⚠️  确保防火墙已开放 11436 端口")
     print("-" * 50)
 
 
@@ -328,4 +328,4 @@ if __name__ == "__main__":
     print_curl_examples()
 
     print("\n✅ 示例执行完成！")
-    print(f"💡 提示: 其他设备可使用 http://{get_local_ip()}:11435 访问")
+    print(f"💡 提示: 其他设备可使用 http://{get_local_ip()}:11436 访问")
