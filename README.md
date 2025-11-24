@@ -69,6 +69,8 @@ ip addr show
 
 找到你的内网 IP 地址，通常是 `192.168.x.x` 或 `10.x.x.x` 格式。
 
+> **注意**: 本配置使用端口 11435（避免与其他服务衝突）
+
 ## 🔧 API 调用示例
 
 ### Python 调用示例
@@ -93,7 +95,7 @@ python api_examples.py
 import requests
 
 response = requests.post(
-    "http://localhost:11434/api/generate",
+    "http://localhost:11435/api/generate",
     json={
         "model": "gpt-oss:20b",
         "prompt": "什么是人工智能？",
@@ -109,7 +111,7 @@ print(response.json()['response'])
 import requests
 
 response = requests.post(
-    "http://192.168.1.100:11434/api/generate",
+    "http://192.168.1.100:11435/api/generate",
     json={
         "model": "gpt-oss:20b",
         "prompt": "什么是人工智能？",
@@ -124,7 +126,7 @@ print(response.json()['response'])
 
 **1. 本地调用 - Generate API**
 ```bash
-curl http://localhost:11434/api/generate -d '{
+curl http://localhost:11435/api/generate -d '{
   "model": "gpt-oss:20b",
   "prompt": "什么是人工智能？",
   "stream": false
@@ -133,7 +135,7 @@ curl http://localhost:11434/api/generate -d '{
 
 **2. 本地调用 - Chat API**
 ```bash
-curl http://localhost:11434/api/chat -d '{
+curl http://localhost:11435/api/chat -d '{
   "model": "gpt-oss:20b",
   "messages": [
     {"role": "user", "content": "你好，请介绍一下自己。"}
@@ -144,7 +146,7 @@ curl http://localhost:11434/api/chat -d '{
 
 **3. 内网调用（替换为实际服务器 IP）**
 ```bash
-curl http://192.168.1.100:11434/api/generate -d '{
+curl http://192.168.1.100:11435/api/generate -d '{
   "model": "gpt-oss:20b",
   "prompt": "Hello from intranet!",
   "stream": false
@@ -153,7 +155,7 @@ curl http://192.168.1.100:11434/api/generate -d '{
 
 **4. 列出所有模型**
 ```bash
-curl http://localhost:11434/api/tags
+curl http://localhost:11435/api/tags
 ```
 
 ## 📡 API 端点说明
@@ -180,37 +182,37 @@ curl http://localhost:11434/api/tags
    **Windows 防火墙**:
    ```powershell
    # PowerShell（管理员权限）
-   New-NetFirewallRule -DisplayName "Ollama API" -Direction Inbound -LocalPort 11434 -Protocol TCP -Action Allow
+   New-NetFirewallRule -DisplayName "Ollama API" -Direction Inbound -LocalPort 11435 -Protocol TCP -Action Allow
    ```
 
    **Linux 防火墙**:
    ```bash
    # ufw
-   sudo ufw allow 11434/tcp
+   sudo ufw allow 11435/tcp
 
    # firewalld
-   sudo firewall-cmd --permanent --add-port=11434/tcp
+   sudo firewall-cmd --permanent --add-port=11435/tcp
    sudo firewall-cmd --reload
    ```
 
 3. **从其他设备测试连接**
    ```bash
    # 测试连接
-   curl http://192.168.1.100:11434/api/tags
+   curl http://192.168.1.100:11435/api/tags
    ```
 
 ### 内网设备配置示例
 
 **从手机/平板访问**:
 - 确保设备连接到同一个内网（同一个 Wi-Fi）
-- 使用浏览器访问: `http://192.168.1.100:11434/api/tags`
+- 使用浏览器访问: `http://192.168.1.100:11435/api/tags`
 
 **从其他电脑访问**:
 ```python
 import requests
 
 SERVER_IP = "192.168.1.100"
-API_URL = f"http://{SERVER_IP}:11434"
+API_URL = f"http://{SERVER_IP}:11435"
 
 # 测试连接
 response = requests.get(f"{API_URL}/api/tags")
@@ -305,10 +307,10 @@ nvidia-smi
 docker-compose ps
 
 # 2. 检查端口是否开放
-netstat -an | grep 11434
+netstat -an | grep 11435
 
 # 3. 在服务器上测试本地访问
-curl http://localhost:11434/api/tags
+curl http://localhost:11435/api/tags
 
 # 4. 检查防火墙
 # Windows: 控制面板 -> Windows Defender 防火墙 -> 高级设置
@@ -386,7 +388,7 @@ environment:
    - 监控异常请求
 
 4. **防火墙配置**
-   - 只开放必要的端口（11434）
+   - 只开放必要的端口（11435）
    - 限制访问来源 IP 范围
 
 ## 📱 移动设备访问示例
@@ -399,7 +401,7 @@ environment:
 // JavaScript/React Native 示例
 const SERVER_IP = "192.168.1.100";
 
-fetch(`http://${SERVER_IP}:11434/api/generate`, {
+fetch(`http://${SERVER_IP}:11435/api/generate`, {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',

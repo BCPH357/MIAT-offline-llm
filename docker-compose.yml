@@ -5,7 +5,7 @@ services:
     image: ollama/ollama:latest
     container_name: ollama_service
     ports:
-      - "11434:11434"  # 改回標準端口，方便內網訪問
+      - "11435:11434"  # 映射到 11435，避免端口衝突
     volumes:
       - ollama_data:/root/.ollama
     restart: unless-stopped
